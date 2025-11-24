@@ -1,62 +1,11 @@
-name: ZMK Build
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      # Checkout repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # Cache west & Zephyr build cache
-      - name: Cache west & Zephyr
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.west
-            ~/.cache/zephyr
-          key: ${{ runner.os }}-zephyr-${{ hashFiles('**/west.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-zephyr-
-
-      # Setup Python
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      # Install west & dependencies
-      - name: Install west & dependencies
-        run: |
-          pip install --upgrade pip
-          pip install west
-          sudo apt-get update
-          sudo apt-get install -y ninja-build dfu-util device-tree-compiler gcc-arm-none-eabi
-
-      # Initialize west using your manifest
-      - name: Initialize West
-        run: |
-          west init -l .
-          west update
-          west zephyr-export
-
-      # Build firmware for Corne (default keymap)
-      - name: Build Corne Keyboard Firmware
-        run: |
-          west build -d build crkbd:default
-
-      # Upload firmware artifact
-      - name: Upload Firmware
-        uses: actions/upload-artifact@v3
-        with:
-          name: crkbd-firmware
-          path: build/zephyr/zmk.uf2
+manifest:
+  remotes:
+    - name: zmkfirmware
+      url-base: https://github.com/zmkfirmware
+  projects:
+    - name: zmk
+      remote: zmkfirmware
+      revision: main
+      import: app/west.yml
+  self:
+    path: config
