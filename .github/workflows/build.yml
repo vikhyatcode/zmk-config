@@ -47,7 +47,7 @@ jobs:
           west build -d build crkbd:default
 
       - name: Upload Firmware
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: crkbd-firmware
           path: build/zephyr/zmk.uf2
