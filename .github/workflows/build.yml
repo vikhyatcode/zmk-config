@@ -1,49 +1,53 @@
-on: [push, pull_request, workflow_dispatch]
+name: ZMK Build
 
-name: Build
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: zmkfirmware/zmk-build-arm:2.5
-    name: Build
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cache west modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-zephyr-modules
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Cache west & Zephyr
+        uses: actions/cache@v4
         with:
           path: |
-            modules/
-            tools/
-            zephyr/
-            bootloader/
-            zmk/
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('manifest-dir/west.yml') }}
+            ~/.west
+            ~/.cache/zephyr
+          key: ${{ runner.os }}-zephyr-${{ hashFiles('config/west.yml') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - name: West Init
-        run: west init -l config
-      - name: West Update
-        run: west update
-      - name: West Zephyr export
-        run: west zephyr-export
-      - name: West Build (KEYBOARD_TITLE)
-        run: west build -s zmk/app -b BOARD_NAME -- -DSHIELD=SHIELD_NAME -DZMK_CONFIG="${GITHUB_WORKSPACE}/config"
-      - name: KEYBOARD_TITLE DTS File
-        if: ${{ always() }}
-        run: cat -n build/zephyr/BOARD_NAME.dts.pre.tmp
-      - name: KEYBOARD_TITLE Kconfig file
-        run: cat build/zephyr/.config | grep -v "^#" | grep -v "^$"
-      - name: Rename zmk.uf2
-        run: cp build/zephyr/zmk.uf2 SHIELD_NAME_BOARD_NAME.uf2
-      - name: Archive (KEYBOARD_TITLE)
-        uses: actions/upload-artifact@v2
+            ${{ runner.os }}-zephyr-
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          name: firmware
-          path: SHIELD_NAME_BOARD_NAME.uf2
+          python-version: '3.x'
+
+      - name: Install west & dependencies
+        run: |
+          pip install --upgrade pip
+          pip install west
+          sudo apt-get update
+          sudo apt-get install -y ninja-build dfu-util device-tree-compiler gcc-arm-none-eabi
+
+      - name: Initialize West
+        run: |
+          west init -l config
+          west update
+          west zephyr-export
+
+      - name: Build Firmware
+        run: |
+          west build -d build crkbd:default
+
+      - name: Upload Firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: crkbd-firmware
+          path: build/zephyr/zmk.uf2
