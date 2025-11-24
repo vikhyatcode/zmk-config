@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Cache west & Zephyr to speed up builds
+      # 2. Cache west & Zephyr
       - name: Cache west & Zephyr
         uses: actions/cache@v4
         with:
@@ -40,21 +40,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build dfu-util device-tree-compiler gcc-arm-none-eabi
 
-      # 5. Initialize west using your manifest
+      # 5. Initialize west
       - name: Initialize West
         run: |
-          west init -l config
+          west init -l .
           west update
           west zephyr-export
 
-      # 6. Build firmware for Corne keyboard (default keymap)
+      # 6. Build firmware using your custom keymap
       - name: Build Corne Keyboard Firmware
         run: |
-          west build -d build crkbd:default
+          west build -d build -s zmk -b crkbd/rev1 -k crone
 
-      # 7. Upload firmware artifact (v4)
+      # 7. Upload firmware artifact
       - name: Upload Firmware
         uses: actions/upload-artifact@v4
         with:
-          name: crkbd-firmware
+          name: crone-firmware
           path: build/zephyr/zmk.uf2
