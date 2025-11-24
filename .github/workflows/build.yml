@@ -11,9 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2. Cache west & Zephyr to speed up builds
       - name: Cache west & Zephyr
         uses: actions/cache@v4
         with:
@@ -24,11 +26,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-zephyr-
 
+      # 3. Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
+      # 4. Install west and dependencies
       - name: Install west & dependencies
         run: |
           pip install --upgrade pip
@@ -36,16 +40,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build dfu-util device-tree-compiler gcc-arm-none-eabi
 
+      # 5. Initialize west using your manifest
       - name: Initialize West
         run: |
           west init -l config
           west update
           west zephyr-export
 
-      - name: Build Firmware
+      # 6. Build firmware for Corne keyboard (default keymap)
+      - name: Build Corne Keyboard Firmware
         run: |
           west build -d build crkbd:default
 
+      # 7. Upload firmware artifact (v4)
       - name: Upload Firmware
         uses: actions/upload-artifact@v4
         with:
