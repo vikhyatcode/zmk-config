@@ -55,8 +55,16 @@ jobs:
         run: west build -d build-right -s zmk -b crkbd/rev1 -DKEYMAP=crone-right
 
       # 7. Upload the firmware artifact
-      - name: Upload Firmware
+      # Upload Left Half
+      - name: Upload Left Firmware
         uses: actions/upload-artifact@v4
         with:
-          name: crone-firmware
-          path: build/zephyr/zmk.uf2
+          name: crone-left-firmware
+          path: build-left/zephyr/zmk.uf2
+
+      # Upload Right Half
+      - name: Upload Right Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: crone-right-firmware
+          path: build-right/zephyr/zmk.uf2
