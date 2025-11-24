@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
+      # 1. Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      # 4. Install west and dependencies
+      # 4. Install west & dependencies
       - name: Install west & dependencies
         run: |
           pip install --upgrade pip
@@ -40,19 +40,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build dfu-util device-tree-compiler gcc-arm-none-eabi
 
-      # 5. Initialize west
+      # 5. Initialize west using correct manifest path
       - name: Initialize West
         run: |
-          west init -l .
+          west init -l config
           west update
           west zephyr-export
 
-      # 6. Build firmware using your custom keymap
+      # 6. Build firmware for Corne keyboard using your custom keymap
       - name: Build Corne Keyboard Firmware
         run: |
           west build -d build -s zmk -b crkbd/rev1 -k crone
 
-      # 7. Upload firmware artifact
+      # 7. Upload the firmware artifact
       - name: Upload Firmware
         uses: actions/upload-artifact@v4
         with:
